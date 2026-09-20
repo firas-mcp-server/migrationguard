@@ -11,5 +11,8 @@
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --clean",
     "dev": "tsup src/index.ts --format esm --watch"
+  },
+  "dependencies": {
+    "libpg-query": "18.1.5"
   }
 }
