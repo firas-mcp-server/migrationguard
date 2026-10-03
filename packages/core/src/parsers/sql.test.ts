@@ -35,3 +35,15 @@ describe("parseSql", () => {
     await expect(parseSql("ALTER TABL x")).rejects.toBeInstanceOf(SqlParseError);
   });
 });
+
+describe("parseSql edge cases", () => {
+  it("reports the start line of multi-line statements and handles CRLF", async () => {
+    const r = await parseSql("SELECT 1;\r\n\r\nALTER TABLE t\r\n  ADD COLUMN a int;\r\n");
+    expect(r.map((s) => s.line)).toEqual([1, 3]);
+  });
+
+  it("clears the transaction flag on ROLLBACK", async () => {
+    const r = await parseSql("START TRANSACTION;\nSELECT 1;\nROLLBACK;\nSELECT 2;");
+    expect(r.map((s) => s.inTransaction)).toEqual([true, true, true, false]);
+  });
+});
