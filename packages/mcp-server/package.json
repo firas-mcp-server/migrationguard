@@ -9,7 +9,15 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --format esm --dts --clean",
-    "dev": "tsup src/index.ts --format esm --watch"
+    "build": "tsup src/index.ts --format esm --clean",
+    "dev": "tsup src/index.ts --format esm --watch --onSuccess \"node dist/index.js\""
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.0",
+    "migrationguard-core": "workspace:*",
+    "zod": "4.6.5"
+  },
+  "bin": {
+    "migrationguard-mcp": "dist/index.js"
   }
 }
