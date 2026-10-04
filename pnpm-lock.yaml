@@ -30,7 +30,11 @@ importers:
         specifier: ^4.0.0
         version: 4.1.11(@types/node@20.19.43)(vite@8.3.2(@types/node@20.19.43)(esbuild@0.27.7))
 
-  packages/cli: {}
+  packages/cli:
+    dependencies:
+      migrationguard-core:
+        specifier: workspace:*
+        version: link:../core
 
   packages/core:
     dependencies:
