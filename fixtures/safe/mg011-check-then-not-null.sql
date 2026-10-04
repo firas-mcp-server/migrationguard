@@ -1,0 +1,5 @@
+-- expect: none
+SET lock_timeout = '5s';
+ALTER TABLE users ADD CONSTRAINT email_not_null CHECK (email IS NOT NULL) NOT VALID;
+ALTER TABLE users VALIDATE CONSTRAINT email_not_null;
+ALTER TABLE users ALTER COLUMN email SET NOT NULL;

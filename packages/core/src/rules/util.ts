@@ -7,9 +7,22 @@ export interface RangeVar {
   relname: string;
 }
 
+export type Str = { String?: { sval: string } };
+
 export interface Constraint {
   contype: string;
   skip_validation?: boolean;
+  /** Set for UNIQUE / PRIMARY KEY ... USING INDEX. */
+  indexname?: string;
+  /** Columns of a table-level UNIQUE / PRIMARY KEY. */
+  keys?: Str[];
+  /** Columns of a table-level FOREIGN KEY. */
+  fk_attrs?: Str[];
+  raw_expr?: unknown;
+}
+
+export function strs(list?: Str[]): string[] {
+  return (list ?? []).flatMap((s) => (s.String ? [s.String.sval] : []));
 }
 
 export interface ColumnDef {
@@ -57,6 +70,8 @@ export function tablesCreatedBefore(statements: ParsedStatement[], index: number
 export interface AlterCmd {
   stmt: ParsedStatement;
   table: string;
+  /** Normalised schema-qualified key, comparable across statements. */
+  key: string;
   cmd: AlterTableCmd;
 }
 
@@ -66,7 +81,8 @@ export function alterCmdsOnExistingTables(ctx: RuleContext): AlterCmd[] {
     const alter = node<AlterTableStmt>(stmt, "AlterTableStmt");
     if (!alter || tablesCreatedBefore(ctx.statements, i).has(tableKey(alter.relation))) return [];
     const table = qualifiedName(alter.relation);
-    return alter.cmds.map(({ AlterTableCmd: cmd }) => ({ stmt, table, cmd }));
+    const key = tableKey(alter.relation);
+    return alter.cmds.map(({ AlterTableCmd: cmd }) => ({ stmt, table, key, cmd }));
   });
 }
 
