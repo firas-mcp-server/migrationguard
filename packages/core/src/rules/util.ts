@@ -1,4 +1,4 @@
-import type { ParsedStatement } from "../types.js";
+import type { Finding, ParsedStatement, Rule, RuleContext, SafeAlternative } from "../types.js";
 
 // Minimal views over the libpg-query AST. Only the fields rules read are typed;
 // the AST itself stays `unknown` in ParsedStatement so core does not depend on the parser.
@@ -9,17 +9,21 @@ export interface RangeVar {
 
 export interface Constraint {
   contype: string;
+  skip_validation?: boolean;
 }
 
 export interface ColumnDef {
   colname: string;
-  typeName?: { names?: { String?: { sval: string } }[] };
+  typeName?: { names?: { String?: { sval: string } }[]; typmods?: unknown[] };
+  /** USING expression of ALTER COLUMN TYPE. */
+  raw_default?: unknown;
   constraints?: { Constraint: Constraint }[];
 }
 
 export interface AlterTableCmd {
   subtype: string;
-  def?: { ColumnDef?: ColumnDef };
+  name?: string;
+  def?: { ColumnDef?: ColumnDef; Constraint?: Constraint };
 }
 
 export interface AlterTableStmt {
@@ -48,4 +52,39 @@ export function tablesCreatedBefore(statements: ParsedStatement[], index: number
     if (create) out.add(tableKey(create.relation));
   }
   return out;
+}
+
+export interface AlterCmd {
+  stmt: ParsedStatement;
+  table: string;
+  cmd: AlterTableCmd;
+}
+
+/** Every ALTER TABLE sub-command on a table that was not created earlier in the same file. */
+export function alterCmdsOnExistingTables(ctx: RuleContext): AlterCmd[] {
+  return ctx.statements.flatMap((stmt, i) => {
+    const alter = node<AlterTableStmt>(stmt, "AlterTableStmt");
+    if (!alter || tablesCreatedBefore(ctx.statements, i).has(tableKey(alter.relation))) return [];
+    const table = qualifiedName(alter.relation);
+    return alter.cmds.map(({ AlterTableCmd: cmd }) => ({ stmt, table, cmd }));
+  });
+}
+
+export function finding(
+  rule: Rule,
+  ctx: RuleContext,
+  stmt: ParsedStatement,
+  message: string,
+  safeAlternative?: SafeAlternative,
+): Finding {
+  return {
+    ruleId: rule.id,
+    severity: rule.severity,
+    message,
+    file: ctx.file,
+    line: stmt.line,
+    statement: stmt.sql,
+    explanation: rule.explain,
+    safeAlternative,
+  };
 }
