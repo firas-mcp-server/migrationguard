@@ -49,13 +49,14 @@ claude mcp add migrationguard -- node /path/to/migrationguard/packages/mcp-serve
 
 Paths are resolved against `MIGRATIONGUARD_ROOT` (default: the current directory). Paths outside it, including via `..` or symlinks, are rejected. All tools are read-only.
 
-| Tool                       | Input                   | Output                             |
-| -------------------------- | ----------------------- | ---------------------------------- |
-| `analyze_migration`        | `{ path }`              | `Report` for one file              |
-| `analyze_directory`        | `{ path }`              | `Report` for a migrations folder   |
-| `suggest_safe_alternative` | `{ ruleId, statement }` | `SafeAlternative`                  |
-| `list_rules`               | `{}`                    | id, title, severity for every rule |
-| `explain_rule`             | `{ ruleId }`            | full explanation                   |
+| Tool                       | Input                     | Output                                                                      |
+| -------------------------- | ------------------------- | --------------------------------------------------------------------------- |
+| `analyze_migration`        | `{ path }`                | `Report` for one file                                                       |
+| `analyze_directory`        | `{ path }`                | `Report` for a migrations folder                                            |
+| `suggest_safe_alternative` | `{ ruleId, statement }`   | `SafeAlternative`                                                           |
+| `list_rules`               | `{}`                      | id, title, severity for every rule                                          |
+| `explain_rule`             | `{ ruleId }`              | full explanation                                                            |
+| `check_code_references`    | `{ name, table?, path? }` | source lines that still mention a column or table (text search, not `.sql`) |
 
 Errors come back as `{ "error": { "code", "message" } }` (`PARSE_ERROR`, `UNKNOWN_RULE`, `NOT_FOUND`, `NOT_A_FILE`, `NOT_A_DIRECTORY`); the server does not crash on bad input.
 
@@ -92,7 +93,7 @@ Honest limits; rules prefer missing a finding over a false alarm.
 - **MG010** knows built-in volatile functions (and serial types) only; volatile user-defined functions are not detected.
 - **`DO $$ ... $$` blocks** are one opaque statement and are not analysed.
 - **Parse errors** have no line number; a file that does not parse is reported as an error and gets no findings.
-- **Application code** is not read. It cannot tell whether a dropped or renamed column is still used (planned for Phase 2).
+- **Application code** is only text-searched by `check_code_references`: whole-word, case-sensitive matches in common source files. It cannot tell a column from an unrelated identifier, and it misses ORM mappings, renamed access and string-built queries.
 - **Postgres only.** MySQL, Alembic and Knex are not supported yet. Behaviour is described for Postgres 11+.
 - It cannot know your migration tool's transaction wrapping beyond explicit `BEGIN`/`COMMIT` in the file.
 

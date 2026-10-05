@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { renderJson } from "migrationguard-core";
 import { z } from "zod";
+import { checkCodeReferences } from "./references.js";
 import { ToolError } from "./errors.js";
 import {
   analyzeDirectory,
@@ -91,6 +92,28 @@ export function createServer(root: string): McpServer {
       annotations: readOnly,
     },
     ({ ruleId }) => guard(() => json(explainRule(ruleId))),
+  );
+
+  server.registerTool(
+    "check_code_references",
+    {
+      description:
+        "Find source code that still mentions a column or table name before it is dropped or renamed. Text search, read-only.",
+      inputSchema: {
+        name: z.string().describe("Column or table name to look for"),
+        table: z
+          .string()
+          .optional()
+          .describe("Table the column belongs to (flags files that also mention it)"),
+        path: z
+          .string()
+          .optional()
+          .describe("Folder inside the project to search (default: the project root)"),
+      },
+      annotations: readOnly,
+    },
+    ({ name, table, path }) =>
+      guard(async () => json(await checkCodeReferences(root, path ?? ".", name, table))),
   );
 
   return server;

@@ -13,6 +13,7 @@ Target: `$ARGUMENTS`. If empty, use `prisma/migrations` if it exists, otherwise 
    - One line of totals (files, high, medium, low, info).
    - Findings grouped by severity: **High**, then **Medium**, then **Low**, then **Info**. For each finding show the rule ID, `file:line`, the message, and the offending statement.
    - For every **high** finding, show its `safeAlternative`: the summary, then each step with its SQL when present. If a high finding has no `safeAlternative`, call `suggest_safe_alternative` with its `ruleId` and `statement`.
+   - For findings that drop or rename a column or table (MG003, MG004, MG009), also call `check_code_references` with the column or table `name` (and `table` for a column) to list code that still uses it, and show the hits. It is a plain text search: say that hits may be unrelated and that no hits does not prove the name is unused.
    - For medium and low findings, give the alternative summary only.
 4. If there are no findings, say "No known risky patterns were found." Never say the migration is "safe": MigrationGuard checks a fixed set of rules on a single file at a time and cannot see table sizes or earlier migrations.
 5. Wording: findings say a statement "may lock or rewrite a large table". Do not state lock durations as fact.

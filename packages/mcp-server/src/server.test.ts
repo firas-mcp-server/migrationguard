@@ -43,16 +43,25 @@ beforeAll(() => {
 });
 
 describe("tools", () => {
-  it("lists the five tools", async () => {
+  it("lists the six tools", async () => {
     const { tools } = await (await connect()).listTools();
     expect(tools.map((t) => t.name).sort()).toEqual([
       "analyze_directory",
       "analyze_migration",
+      "check_code_references",
       "explain_rule",
       "list_rules",
       "suggest_safe_alternative",
     ]);
     expect(tools.every((t) => t.annotations?.readOnlyHint)).toBe(true);
+  });
+
+  it("check_code_references finds usages and rejects traversal", async () => {
+    const hit = await call("check_code_references", { name: "email", path: "." });
+    expect(hit.isError).toBe(false);
+    expect(hit.body.note).toContain("Text search only");
+    const bad = await call("check_code_references", { name: "email", path: ".." });
+    expect(bad.body.error.code).toBe("PATH_OUTSIDE_ROOT");
   });
 
   it("list_rules returns all 12 rules with id, title, severity", async () => {

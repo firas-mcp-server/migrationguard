@@ -63,12 +63,13 @@ describe("MCP server over stdio", () => {
   const body = (res: unknown) =>
     JSON.parse((res as { content: { text: string }[] }).content[0]?.text ?? "null");
 
-  it("lists the five tools", async () => {
+  it("lists the six tools", async () => {
     const names = await withClient(async (c) => (await c.listTools()).tools.map((t) => t.name));
     expect(names.sort()).toEqual(
       [
         "analyze_directory",
         "analyze_migration",
+        "check_code_references",
         "explain_rule",
         "list_rules",
         "suggest_safe_alternative",
@@ -100,6 +101,16 @@ describe("MCP server over stdio", () => {
       ),
     );
     expect(res.findings.map((f: { ruleId: string }) => f.ruleId)).toEqual(["MG003"]);
+  });
+
+  it("check_code_references runs against the project", async () => {
+    const res = body(
+      await withClient((c) =>
+        c.callTool({ name: "check_code_references", arguments: { name: "legacy" } }),
+      ),
+    );
+    expect(res.references).toEqual([]); // the sample project has no application code
+    expect(res.filesScanned).toBe(0);
   });
 
   it("rejects paths outside the root without crashing", async () => {

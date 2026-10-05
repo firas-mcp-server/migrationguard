@@ -19,6 +19,7 @@ Use the `migrationguard` MCP tool `analyze_migration` for the one file you chang
 - **high**: the statement may lock or rewrite a large table, or lose data. Show the `safeAlternative` steps and recommend the multi-step approach before the migration is merged.
 - **medium**: may block writes briefly or has a missing-index cost. Mention it and the alternative's summary.
 - **low** (for example MG012, no `lock_timeout`): suggest the one-line fix.
+- For MG003, MG004 and MG009 (dropping or renaming), run `check_code_references` for the name and show the hits. It is a text search: hits may be unrelated, and no hits is not proof of no usage.
 - Use `explain_rule` for the Postgres behaviour behind a rule, and `suggest_safe_alternative` for a statement the user pastes.
 - Table size is unknown. Say "may lock or rewrite a large table", never state a lock duration as fact.
 - Known limits: rules look at one file at a time. MG008 (missing FK index) and MG011 (SET NOT NULL) can be false positives when the index or CHECK constraint was added in an earlier migration. Say so if the user has one.

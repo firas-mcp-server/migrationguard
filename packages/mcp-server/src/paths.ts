@@ -30,15 +30,15 @@ export async function resolveInside(root: string, input: string): Promise<string
 }
 
 // Symlinks are skipped while walking so a link inside the folder cannot lead out of it.
-async function walk(dir: string): Promise<string[]> {
+export async function walk(dir: string, accept: (name: string) => boolean): Promise<string[]> {
   const found: string[] = [];
   for (const entry of await readdir(dir, { withFileTypes: true })) {
     if (entry.isSymbolicLink() || entry.name === "node_modules" || entry.name.startsWith(".")) {
       continue;
     }
     const full = join(dir, entry.name);
-    if (entry.isDirectory()) found.push(...(await walk(full)));
-    else if (entry.name.endsWith(".sql")) found.push(full);
+    if (entry.isDirectory()) found.push(...(await walk(full, accept)));
+    else if (accept(entry.name)) found.push(full);
   }
   return found;
 }
@@ -70,7 +70,7 @@ export async function readSqlDirectory(root: string, input: string): Promise<Sou
       `"${input}" is not a folder. Use analyze_migration for files.`,
     );
   }
-  const paths = await walk(path);
+  const paths = await walk(path, (n) => n.endsWith(".sql"));
   if (paths.length === 0) throw new ToolError("NO_SQL_FILES", `No .sql files found in "${input}".`);
   return load(root, paths);
 }
