@@ -11,6 +11,7 @@ const TOOLS = [
   "analyze_directory",
   "suggest_safe_alternative",
   "list_rules",
+  "check_code_references",
   "explain_rule",
 ];
 
