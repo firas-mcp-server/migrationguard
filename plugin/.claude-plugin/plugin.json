@@ -1,0 +1,6 @@
+{
+  "name": "migrationguard",
+  "description": "Reviews Postgres migrations for risky operations and proposes safer alternatives. Requires the migrationguard MCP server.",
+  "version": "0.1.0",
+  "license": "MIT"
+}
