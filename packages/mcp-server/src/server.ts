@@ -40,7 +40,7 @@ const json = (v: unknown) => JSON.stringify(v, null, 2);
 
 /** Builds the server. `root` is the project root; no file outside it is ever read. */
 export function createServer(root: string): McpServer {
-  const server = new McpServer({ name: "migrationguard", version: "0.0.0" });
+  const server = new McpServer({ name: "migrationguard", version: "0.1.0" });
 
   server.registerTool(
     "analyze_migration",
