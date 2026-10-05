@@ -9,7 +9,7 @@ export default defineConfig({
     },
   },
   test: {
-    include: ["packages/*/src/**/*.test.ts", "fixtures/**/*.test.ts"],
+    include: ["packages/*/src/**/*.test.ts", "fixtures/**/*.test.ts", "plugin/**/*.test.ts"],
     passWithNoTests: true,
   },
 });
